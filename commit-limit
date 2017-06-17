@@ -1,0 +1,36 @@
+#!/bin/zsh
+fgrep Commit $@ |
+awk	-F: '
+function trim( s, v )	{
+	v = s
+	sub( /^[ \t]*/, "", v )
+	sub( /[ \t]*$/, "", v )
+	return( v )
+}
+function dump()	{
+	if( old_fn != "" )	{
+		cl = val[ "CommitLimit" ]
+		cas = val[ "Committed_AS" ]
+		printf "%s\t%s\t%s", old_fn, cl, cas
+		if( (cas + 0) > (cl + 0) )	{
+			printf "\tBINGO"
+		}
+		printf "\n"
+	}
+	old_fn = fn
+}
+NF == 3	{
+	fn = trim( $1 )
+	key = trim( $2 )
+	value = trim( $3 )
+	if( fn != old_fn )	{
+		dump()
+	}
+	val[ key ] = value
+}
+END	{
+	if( fn != old_fn )	{
+		dump()
+	}
+}
+' 
